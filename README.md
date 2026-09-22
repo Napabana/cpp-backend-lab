@@ -253,9 +253,16 @@ cpp-backend-lab/
 
 ## 当前阶段
 
-P0 + P1 已完成，当前只做 P2-1：HTTP Server Bootstrap。
+P0 + P1 已完成，P2-1 已验收通过，当前做 P2-2：Route / Handler / Request / Response。
 
-本步使用 cpp-httplib 启动 `127.0.0.1:8080`，只提供 `GET /health`，用于验证请求能够进入 handler 并返回响应。
+本步在已有 `GET /health` 基础上增加两个教学路由：
+
+```text
+GET /hello
+GET /echo/:message
+```
+
+目标是理解 Method + Path 如何匹配 route、handler 如何读取 `Request`，以及如何填写 `Response`。
 
 当前不做：
 

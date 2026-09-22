@@ -117,16 +117,17 @@ std::condition_variable cv_;
 当前阶段是：
 
 ```text
-P2-1：HTTP Server Bootstrap
+P2-2：Route / Handler / Request / Response
 ```
 
-当前只验证一个最小闭环：
+P2-1 已在本地验收通过。当前只验证 HTTP Server 如何根据 Method + Path 选择 handler，以及 handler 如何读取 Request、填写 Response。
 
 ```text
-GET /health
-→ cpp-httplib 路由匹配
-→ handler
-→ JSON Response
+GET /hello
+GET /echo/:message
+→ route matching
+→ handler(request, response)
+→ path_params / status / Content-Type / body
 ```
 
 详细任务规范见：
@@ -135,7 +136,7 @@ GET /health
 docs/P2-http-server.md
 ```
 
-在用户确认 P2-1 本地验收通过之前，不提前实现 P2-2 的教学路由、POST /tasks、TaskStore、MySQL、Redis、消息队列或底层 Socket。
+P2-2 只允许增加教学路由，不提前实现 POST /tasks、JSON request body parsing、TaskStore、MySQL、Redis、消息队列或底层 Socket。
 
 ## 与用户交互时的推荐节奏
 

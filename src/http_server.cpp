@@ -4,24 +4,44 @@
 #include <nlohmann/json.hpp>
 
 HttpServer::HttpServer() {
-    // route 是 HTTP 方法与路径的匹配规则；handler 是匹配成功后执行的函数。
+    // Route = HTTP Method + Path Pattern + Handler。
     server_.Get("/health", [](const httplib::Request& request,
                               httplib::Response& response) {
-        // Request 表示客户端已经被解析的请求，这里观察它的方法和路径。
         std::cout << "received " << request.method << ' ' << request.path << '\n';
 
-        // 用 C++ 对象构造 JSON，再序列化为 Response body。
         const nlohmann::json body = {{"status", "ok"}};
-
-        // Response 表示将要返回给客户端的响应；库会把它序列化为 HTTP 报文。
         response.set_content(body.dump(), "application/json");
+    });
+
+    // 固定路径：只有 GET /hello 会匹配这个 handler。
+    server_.Get("/hello", [](const httplib::Request& request,
+                             httplib::Response& response) {
+        std::cout << "received " << request.method << ' ' << request.path << '\n';
+
+        // Response 中最核心的是 status、headers 和 body。
+        // set_content 会设置 body，同时生成对应的 Content-Type。
+        response.status = 200;
+        response.set_content("hello\n", "text/plain");
+    });
+
+    // 动态路径：:message 表示这一段路径由客户端提供。
+    // 例如 GET /echo/cpp 会得到 path_params["message"] == "cpp"。
+    server_.Get("/echo/:message", [](const httplib::Request& request,
+                                     httplib::Response& response) {
+        const std::string& message = request.path_params.at("message");
+
+        std::cout << "received " << request.method << ' ' << request.path
+                  << ", message=" << message << '\n';
+
+        response.status = 200;
+        response.set_content(message + "\n", "text/plain");
     });
 }
 
 bool HttpServer::run() {
     std::cout << "HTTP server listening on http://127.0.0.1:8080\n";
 
-    // listen 内部会持续接受并处理连接，所以服务器运行期间当前线程会阻塞在这里。
-    // 调用过程：GET /health 到达 -> 匹配上面的 route -> 执行 handler -> 发送 Response。
+    // listen 启动服务器并持续等待请求。
+    // cpp-httplib 解析请求后，会按 Method + Path 找到对应 route，再调用 handler。
     return server_.listen("127.0.0.1", 8080);
 }

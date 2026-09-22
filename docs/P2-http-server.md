@@ -143,7 +143,7 @@ http_server_demo
 
 ---
 
-# 4. 当前 P2-1 代码审查结果
+# 4. P2-1 验收结果
 
 ## 4.1 已经做对的部分
 
@@ -221,78 +221,26 @@ HTTP Request
 
 ---
 
-## 4.2 当前 P2-1 还需要修正的部分
+## 4.2 验收结论
 
-当前 P2-1 **还不能算最终验收通过**，需要两个最小修正。
+P2-1 已由用户在本地 WSL 环境完成编译、启动与 curl 验证。
 
-### 修正 A：`/health` 返回格式与目标不一致
-
-当前代码：
-
-```cpp
-response.set_content("OK\n", "text/plain");
-```
-
-当前实际响应是：
+当前基线已经满足：
 
 ```text
-Content-Type: text/plain
-
-OK
+GET /health
+→ 200
+→ Content-Type: application/json
+→ {"status":"ok"}
 ```
 
-P2 定义的健康检查目标是：
+同时：
 
-```json
-{
-  "status": "ok"
-}
-```
+- `cpp-httplib` 固定为 v0.56.0；
+- `nlohmann/json` 固定为 v3.12.0；
+- 服务端能够打印请求 method 和 path；
+- 没有提前加入 TaskStore、数据库或底层 socket 实现。
 
-因此 P2-1 应改成 JSON Response。
-
-验收结果应至少满足：
-
-```text
-HTTP status: 200
-Content-Type: application/json
-Body: {"status":"ok"}
-```
-
-不要求 JSON 带缩进。
-
----
-
-### 修正 B：CMake 还没有引入 `nlohmann/json`
-
-当前 `CMakeLists.txt` 已固定：
-
-```text
-cpp-httplib v0.56.0
-```
-
-但尚未声明 `nlohmann/json`。
-
-P2-1 原目标要求先建立并固定 HTTP + JSON 两个依赖，因此应在本 Step 完成：
-
-```text
-FetchContent_Declare(nlohmann_json ...)
-FetchContent_MakeAvailable(nlohmann_json)
-```
-
-并让：
-
-```text
-http_server_demo
-```
-
-链接：
-
-```text
-nlohmann_json::nlohmann_json
-```
-
-P2-1 中只需要用它构造 `/health` 的简单 JSON，不要继续做 POST JSON 解析。
 
 ---
 
@@ -461,7 +409,7 @@ received GET /health
 
 # 6. P2-2：Route / Handler / Request / Response
 
-> 只有用户确认 P2-1 验收通过后才能执行。
+> P2-1 已验收通过；当前执行本 Step。
 
 ## 6.1 业务问题
 
@@ -960,23 +908,23 @@ GET /tasks/{id}
 当前只执行：
 
 ```text
-P2-1 修正与验收
+P2-2：Route / Handler / Request / Response
 ```
 
-Codex 应：
+本 Step：
 
-1. 阅读当前：
-   - `CMakeLists.txt`
-   - `include/http_server.h`
-   - `src/http_server.cpp`
-   - `src/http_server_main.cpp`
-2. 保留当前最小结构。
-3. 在 CMake 中固定引入 `nlohmann/json v3.12.0`。
-4. 将 `/health` 从 `text/plain` 改为 JSON：
-   ```json
-   {"status":"ok"}
-   ```
-5. 不增加任何其他 route。
-6. 不实现 P2-2。
-7. 给出构建、启动和 curl 验证命令。
-8. 修改完成后停止，等待用户本地验收。
+1. 保留已有 `GET /health`。
+2. 增加 `GET /hello`，观察固定路径 route。
+3. 增加 `GET /echo/:message`，通过 `request.path_params.at("message")` 读取动态路径参数。
+4. 在 handler 中观察：
+   - `request.method`
+   - `request.path`
+   - `request.path_params`
+5. 在 Response 中明确观察：
+   - status
+   - Content-Type
+   - body
+6. 不实现 POST /tasks。
+7. 不解析 JSON Request Body。
+8. 不加入 Task、TaskStore、mutex 或数据库。
+9. 通过 curl 验收三个 GET route 后停止，等待用户确认。
