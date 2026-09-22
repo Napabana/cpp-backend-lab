@@ -117,17 +117,17 @@ std::condition_variable cv_;
 当前阶段是：
 
 ```text
-P2-2：Route / Handler / Request / Response
+P2-3：POST /tasks + JSON
 ```
 
-P2-1 已在本地验收通过。当前只验证 HTTP Server 如何根据 Method + Path 选择 handler，以及 handler 如何读取 Request、填写 Response。
+P2-1、P2-2 已在本地验收通过。当前只验证客户端如何通过 POST Request Body 发送 JSON，以及 handler 如何解析、校验并返回 JSON Response。
 
 ```text
-GET /hello
-GET /echo/:message
-→ route matching
-→ handler(request, response)
-→ path_params / status / Content-Type / body
+POST /tasks
+→ request.body
+→ nlohmann::json::parse
+→ 字段校验
+→ JSON Response
 ```
 
 详细任务规范见：
@@ -136,7 +136,7 @@ GET /echo/:message
 docs/P2-http-server.md
 ```
 
-P2-2 只允许增加教学路由，不提前实现 POST /tasks、JSON request body parsing、TaskStore、MySQL、Redis、消息队列或底层 Socket。
+P2-3 只允许实现 POST /tasks 的 JSON 解析与响应，不保存任务，不加入 TaskStore、自增 ID、GET /tasks/{id}、MySQL、Redis、消息队列或底层 Socket。
 
 ## 与用户交互时的推荐节奏
 

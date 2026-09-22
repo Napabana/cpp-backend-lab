@@ -253,21 +253,22 @@ cpp-backend-lab/
 
 ## 当前阶段
 
-P0 + P1 已完成，P2-1 已验收通过，当前做 P2-2：Route / Handler / Request / Response。
+P0 + P1 已完成，P2-1、P2-2 已验收通过，当前做 P2-3：POST /tasks + JSON。
 
-本步在已有 `GET /health` 基础上增加两个教学路由：
+本步增加 `POST /tasks`，读取 `request.body`，使用 `nlohmann::json` 解析和校验 JSON，并返回 JSON Response。
 
-```text
-GET /hello
-GET /echo/:message
+当前成功请求格式：
+
+```json
+{"type":"demo","payload":"hello"}
 ```
 
-目标是理解 Method + Path 如何匹配 route、handler 如何读取 `Request`，以及如何填写 `Response`。
+当前只返回 `status=pending`，不会保存任务。
 
 当前不做：
 
-- POST /tasks
-- JSON task parsing
+- TaskStore / 持久化
+- GET /tasks/{id}
 - ThreadPool 与 HTTP Server 集成
 - MySQL
 - Redis

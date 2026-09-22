@@ -561,7 +561,7 @@ mutex
 
 # 7. P2-3：POST /tasks + JSON
 
-> 只有 P2-2 验收完成后执行。
+> P2-2 已验收通过；当前执行本 Step。
 
 ## 7.1 业务问题
 
@@ -908,23 +908,17 @@ GET /tasks/{id}
 当前只执行：
 
 ```text
-P2-2：Route / Handler / Request / Response
+P2-3：POST /tasks + JSON
 ```
 
 本 Step：
 
-1. 保留已有 `GET /health`。
-2. 增加 `GET /hello`，观察固定路径 route。
-3. 增加 `GET /echo/:message`，通过 `request.path_params.at("message")` 读取动态路径参数。
-4. 在 handler 中观察：
-   - `request.method`
-   - `request.path`
-   - `request.path_params`
-5. 在 Response 中明确观察：
-   - status
-   - Content-Type
-   - body
-6. 不实现 POST /tasks。
-7. 不解析 JSON Request Body。
-8. 不加入 Task、TaskStore、mutex 或数据库。
-9. 通过 curl 验收三个 GET route 后停止，等待用户确认。
+1. 保留已有 GET routes。
+2. 增加 `POST /tasks`。
+3. 从 `request.body` 读取原始请求体。
+4. 使用 `nlohmann::json::parse` 解析 JSON。
+5. 要求 `type`、`payload` 存在且为字符串。
+6. 成功时返回 201 与 `{"type":...,"payload":...,"status":"pending"}`。
+7. JSON 语法错误或字段错误返回 400。
+8. 不保存任务，不加入 TaskStore、自增 ID、GET /tasks/{id} 或 mutex。
+9. curl 验收成功、非法 JSON、缺失字段三种情况后停止。
