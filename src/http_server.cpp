@@ -34,6 +34,9 @@ HttpServer::HttpServer() {
 
     // POST /tasks 的数据放在 Request Body 中，并使用 JSON 表示。
     // 本 Step 只做“解析 -> 校验 -> 返回”，还不会保存任务。
+    // P2-4 TODO：当前仍保留 P2-3 的“解析后直接返回”实现，因此代码可以继续编译。
+    // 你需要把这个 handler 改成真正创建 Task 并保存到 HttpServer 的成员 TaskStore。
+    // TODO(P2-4-5)：为了访问 HttpServer 的成员，把 lambda 捕获从 [] 改成 [this]。
     server_.Post("/tasks", [](const httplib::Request& request,
                               httplib::Response& response) {
         std::cout << "received " << request.method << ' ' << request.path
@@ -57,13 +60,22 @@ HttpServer::HttpServer() {
                 return;
             }
 
+            // TODO(P2-4-6)：删除下面这段 P2-3 临时返回逻辑，改成：
+            // 1. 构造一个 Task。
+            // 2. 从 input 读取 type / payload，status 设为 "pending"。
+            // 3. 用 next_task_id_ 给它分配 id。
+            // 4. 用 lock_guard 锁住 TaskStore 后保存任务。
+            // 5. 返回包含 id / type / payload / status 的 JSON。
+            //
+            // 注意：id 分配和写入 TaskStore 必须处于同一个互斥保护范围内，
+            // 否则两个并发 POST 可能拿到相同 id，或同时修改容器。
+
             const nlohmann::json result = {
                 {"type", input.at("type").get<std::string>()},
                 {"payload", input.at("payload").get<std::string>()},
                 {"status", "pending"}
             };
 
-            // 创建资源使用 201；当前只是返回结果，还没有持久化 Task。
             response.status = 201;
             response.set_content(result.dump(), "application/json");
         } catch (const nlohmann::json::parse_error&) {

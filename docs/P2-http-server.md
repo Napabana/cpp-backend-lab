@@ -649,7 +649,7 @@ mutex
 
 # 8. P2-4：Task + 内存 TaskStore
 
-> 只有 P2-3 验收完成后执行。
+> P2-3 已验收通过；当前执行本 Step。
 
 ## 8.1 业务问题
 
@@ -905,20 +905,26 @@ GET /tasks/{id}
 
 # 13. 当前下一步
 
-当前只执行：
+当前执行：
 
 ```text
-P2-3：POST /tasks + JSON
+P2-4：Task + 内存 TaskStore
 ```
 
-本 Step：
+从本 Step 开始采用半引导实现，不直接提交完整答案。
 
-1. 保留已有 GET routes。
-2. 增加 `POST /tasks`。
-3. 从 `request.body` 读取原始请求体。
-4. 使用 `nlohmann::json::parse` 解析 JSON。
-5. 要求 `type`、`payload` 存在且为字符串。
-6. 成功时返回 201 与 `{"type":...,"payload":...,"status":"pending"}`。
-7. JSON 语法错误或字段错误返回 400。
-8. 不保存任务，不加入 TaskStore、自增 ID、GET /tasks/{id} 或 mutex。
-9. curl 验收成功、非法 JSON、缺失字段三种情况后停止。
+仓库提供可编译骨架，开发者亲手完成：
+
+1. 在 `Task` 中补全 `id / type / payload / status`。
+2. 在 `HttpServer` 中增加：
+   - `unordered_map<int, Task>` TaskStore
+   - 从 1 开始的 `next_task_id_`
+   - 保护二者的 `mutex`
+3. 将 POST /tasks 的 lambda 从 `[]` 改成 `[this]`，以访问当前 HttpServer 对象成员。
+4. JSON 校验通过后：
+   - 构造 Task
+   - 在互斥保护下分配 id
+   - 保存到 TaskStore
+   - 返回包含 id 的 JSON
+5. 暂时不实现 GET /tasks/{id}。
+6. 完成后先本地编译和 POST 验证，再做代码 review。

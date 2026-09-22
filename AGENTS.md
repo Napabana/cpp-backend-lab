@@ -117,16 +117,17 @@ std::condition_variable cv_;
 当前阶段是：
 
 ```text
-P2-3：POST /tasks + JSON
+P2-4：Task + 内存 TaskStore
 ```
 
-P2-1、P2-2 已在本地验收通过。当前只验证客户端如何通过 POST Request Body 发送 JSON，以及 handler 如何解析、校验并返回 JSON Response。
+P2-1、P2-2、P2-3 已在本地验收通过。当前进入半引导实现：由开发者亲手补全 Task、内存 TaskStore、自增 ID 和互斥保护。
 
 ```text
 POST /tasks
-→ request.body
-→ nlohmann::json::parse
-→ 字段校验
+→ JSON parse
+→ 构造 Task
+→ 分配 id
+→ 写入内存 TaskStore
 → JSON Response
 ```
 
@@ -136,7 +137,7 @@ POST /tasks
 docs/P2-http-server.md
 ```
 
-P2-3 只允许实现 POST /tasks 的 JSON 解析与响应，不保存任务，不加入 TaskStore、自增 ID、GET /tasks/{id}、MySQL、Redis、消息队列或底层 Socket。
+P2-4 采用半引导实现：仓库只提供可编译 TODO 骨架，开发者亲手补全核心代码。不要提前实现 GET /tasks/{id}、MySQL、Redis、消息队列或底层 Socket。
 
 ## 与用户交互时的推荐节奏
 
