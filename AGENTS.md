@@ -117,46 +117,55 @@ std::condition_variable cv_;
 当前阶段是：
 
 ```text
-P0 + P1：ThreadPool
+P2-1：HTTP Server Bootstrap
 ```
 
-当前目标不是写 HTTP Server，而是实现未来异步任务服务中的 Worker 执行层。
+当前只验证一个最小闭环：
+
+```text
+GET /health
+→ cpp-httplib 路由匹配
+→ handler
+→ JSON Response
+```
 
 详细任务规范见：
 
 ```text
-docs/P1-thread-pool.md
+docs/P2-http-server.md
 ```
+
+在用户确认 P2-1 本地验收通过之前，不提前实现 P2-2 的教学路由、POST /tasks、TaskStore、MySQL、Redis、消息队列或底层 Socket。
 
 ## 与用户交互时的推荐节奏
 
-如果用户说“继续”，优先只推进一个明确增量，例如：
+如果用户说“继续”，优先只推进当前阶段中的一个明确增量。
+
+P2 当前按以下顺序推进：
 
 ```text
-Step 1：创建 4 个 worker
-Step 2：让 worker 有生命周期循环
-Step 3：增加共享 task queue
-Step 4：增加 mutex
-Step 5：增加 condition_variable
-Step 6：实现 submit
-Step 7：实现 stop / destructor
-Step 8：增加运行验证
+P2-1：HTTP Server Bootstrap
+P2-2：Route / Handler / Request / Response
+P2-3：POST /tasks + JSON
+P2-4：Task + 内存 TaskStore
+P2-5：GET /tasks/{id}
+P2-6：错误处理与收口
 ```
 
 每一步完成后，都应该能独立解释和验证。
 
-不要因为后面的代码最终需要这些组件，就在第一步全部加入。
+不要因为后面的代码最终需要这些组件，就在前面的 Step 提前加入。
 
 ## 验收优先于代码数量
 
 每个增量都必须给出至少一种可观察验证方式，例如：
 
 ```text
-worker 启动日志
-不同 thread id
-任务开始 / 完成日志
-任务耗时
-程序退出是否卡死
+curl 返回的 HTTP status
+Content-Type
+Response body
+服务端 method / path 日志
+进程是否持续监听
 ```
 
 出现 bug 时，优先帮助开发者复现、定位和解释，而不是直接重写整个模块。
